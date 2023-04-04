@@ -84,3 +84,18 @@ pub fn either(name: []const u8, concepts: anytype) Concept {
     }
     return Concept.err(name, errmsg);
 }
+
+pub fn sameas(comptime Expect: type, comptime Got: type) Concept {
+    if (Expect == Got) {
+        return Concept.ok();
+    } else {
+        return Concept.err(
+            "sameas(" ++ @typeName(Expect) ++ ")",
+            comptime std.fmt.comptimePrint(
+                \\Got wrong type
+                \\Compare		{}
+                \\with expected	{}
+            , .{ Got, Expect }),
+        );
+    }
+}

@@ -28,3 +28,7 @@ test "Either concept test" {
     //concept.either("EitherConcept", .{concept.AlwaysInvalid, concept.AlwaysInvalid}),
     //);
 }
+
+test "Sameas" {
+	//concept.requires(concept.sameas(i32, bool));
+}
