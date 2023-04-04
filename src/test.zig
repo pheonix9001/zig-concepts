@@ -24,11 +24,11 @@ test "Iterator concept test" {
 }
 
 test "Either concept test" {
-    // concept.requires(
-    // concept.either("EitherConcept", .{concept.AlwaysInvalid, concept.AlwaysInvalid}),
-    // );
+    //concept.requires(
+    //  concept.either(.{ concept.AlwaysInvalid, concept.AlwaysInvalid }).with_name("EitherConcept"),
+    //);
 }
 
 test "Sameas" {
-	//concept.requires(concept.sameas(i32, bool));
+    //concept.requires(concept.sameas(i32, bool));
 }

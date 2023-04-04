@@ -16,11 +16,11 @@ pub const Concept = struct {
         };
     }
     pub fn with_name(orig: Concept, newname: []const u8) Concept {
-        return if (orig.err) |err| {
-            fail(newname, err);
+        if (orig.err) |err| {
+            return fail(newname, err);
         } else {
-            ok(newname);
-        };
+            return ok(newname);
+        }
     }
 };
 pub const AlwaysValid = Concept.ok();
@@ -37,6 +37,7 @@ pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime
     const decls = switch (info) {
         .Struct => |s| s.decls,
         .Enum => |e| e.decls,
+        .Union => |e| e.decls,
         else => @compileError("hasMethod expects a struct, union or enum"),
     };
 
@@ -58,26 +59,26 @@ pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime
     );
 }
 
-pub fn all(name: []const u8, concepts: anytype) Concept {
+pub fn all(concepts: anytype) Concept {
     inline for (concepts) |concept| {
         if (concept.err) |err| {
-            return Concept.fail(name, err);
+            return Concept.fail("all", err);
         }
     }
-    return Concept.ok(name);
+    return Concept.ok("all");
 }
 
-pub fn either(name: []const u8, concepts: anytype) Concept {
+pub fn either(concepts: anytype) Concept {
     comptime var errmsg: []const u8 = "It must implement one of";
     inline for (concepts) |concept| {
         errmsg = errmsg ++ "\n\t" ++ concept.name;
         if (concept.err) |err| {
             _ = err;
         } else {
-            return Concept.ok(name);
+            return Concept.ok("either");
         }
     }
-    return Concept.fail(name, errmsg);
+    return Concept.fail("either", errmsg);
 }
 
 pub fn sameas(comptime Expect: type, comptime Got: type) Concept {
