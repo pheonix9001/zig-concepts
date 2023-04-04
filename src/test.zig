@@ -8,17 +8,23 @@ const i32iter = struct {
         return self.current;
     }
     pub fn current(self: Self) i32 {
-	    return self.current;
+        return self.current;
     }
 };
 
 fn Iterator(comptime Self: type, comptime T: type) concept.Concept {
     return concept.all("Iterator", .{
-        concept.hasMethod(Self, "next", fn (*Self) T),
-        concept.hasMethod(Self, "current", fn (Self) T),
+        concept.decl(Self, "next", fn (*Self) T),
+        concept.decl(Self, "current", fn (Self) T),
     });
 }
 
 test "Iterator concept test" {
     concept.requires(Iterator(i32iter, i32));
+}
+
+test "Either concept test" {
+    //concept.requires(
+    //concept.either("EitherConcept", .{concept.AlwaysInvalid, concept.AlwaysInvalid}),
+    //);
 }

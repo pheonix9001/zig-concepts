@@ -1,6 +1,6 @@
 const std = @import("std");
 test {
-	_ = @import("test.zig");
+    _ = @import("test.zig");
 }
 
 pub const Concept = union(enum) {
@@ -18,10 +18,9 @@ pub const Concept = union(enum) {
             .src = src,
         } };
     }
-
-    const AlwaysValid = Concept.ok();
-    const AlwaysInvalid = Concept.err("Concept.AlwaysInvalid", "This concept always errors");
 };
+pub const AlwaysValid = Concept.ok();
+pub const AlwaysInvalid = Concept.err("Concept.AlwaysInvalid", "This concept always errors");
 
 pub fn requires(comptime concept: Concept) void {
     switch (concept) {
@@ -39,7 +38,7 @@ pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime
     };
 
     for (decls) |each_decl| {
-        if (std.mem.eql(u8, decl.name, method_name)) {
+        if (std.mem.eql(u8, each_decl.name, method_name)) {
             const decl_type =
                 @TypeOf(@field(Container, each_decl.name));
             if (decl_type != ExpectedT) {
@@ -75,3 +74,13 @@ pub fn all(name: []const u8, concepts: anytype) Concept {
     return Concept.ok();
 }
 
+pub fn either(name: []const u8, concepts: anytype) Concept {
+    comptime var errmsg: []const u8 = "It must implement one of";
+    inline for (concepts) |concept| {
+        switch (concept) {
+            .Ok => return Concept.ok(),
+            .Err => |err| errmsg = errmsg ++ "\n\t" ++ err.src,
+        }
+    }
+    return Concept.err(name, errmsg);
+}
