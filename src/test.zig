@@ -24,9 +24,9 @@ test "Iterator concept test" {
 }
 
 test "Either concept test" {
-    //concept.requires(
-    //concept.either("EitherConcept", .{concept.AlwaysInvalid, concept.AlwaysInvalid}),
-    //);
+    // concept.requires(
+    // concept.either("EitherConcept", .{concept.AlwaysInvalid, concept.AlwaysInvalid}),
+    // );
 }
 
 test "Sameas" {

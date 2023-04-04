@@ -3,29 +3,32 @@ test {
     _ = @import("test.zig");
 }
 
-pub const Concept = union(enum) {
-    Ok,
-    Err: struct {
-        src: []const u8,
-        err: []const u8,
-    },
-    pub fn ok() Concept {
-        return Concept.Ok;
+pub const Concept = struct {
+    name: []const u8,
+    err: ?[]const u8 = null,
+    pub fn ok(name: []const u8) Concept {
+        return .{ .name = name };
     }
-    pub fn err(src: []const u8, _err: []const u8) Concept {
-        return Concept{ .Err = .{
-            .err = _err,
-            .src = src,
-        } };
+    pub fn fail(name: []const u8, err: []const u8) Concept {
+        return .{
+            .name = name,
+            .err = err,
+        };
+    }
+    pub fn with_name(orig: Concept, newname: []const u8) Concept {
+        return if (orig.err) |err| {
+            fail(newname, err);
+        } else {
+            ok(newname);
+        };
     }
 };
 pub const AlwaysValid = Concept.ok();
-pub const AlwaysInvalid = Concept.err("Concept.AlwaysInvalid", "This concept always errors");
+pub const AlwaysInvalid = Concept.fail("Concept.AlwaysInvalid", "This concept always errors");
 
 pub fn requires(comptime concept: Concept) void {
-    switch (concept) {
-        .Ok => {},
-        .Err => |err| @compileError("Failed to assert concept: " ++ err.src ++ "\n" ++ err.err),
+    if (concept.err) |err| {
+        @compileError("Failed to assert concept: " ++ concept.name ++ "\n" ++ err);
     }
 }
 
@@ -42,21 +45,14 @@ pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime
             const decl_type =
                 @TypeOf(@field(Container, each_decl.name));
             if (decl_type != ExpectedT) {
-                return Concept.err(
-                    "hasMethod",
-                    comptime std.fmt.comptimePrint(
-                        \\method {s} is implemented in {} but has the wrong type
-                        \\Compare		{}
-                        \\with expected	{}
-                    , .{ method_name, Container, decl_type, ExpectedT }),
-                );
+                return sameas(ExpectedT, decl_type);
             }
 
-            return Concept.ok();
+            return Concept.ok("hasMethod");
         }
     }
 
-    return Concept.err(
+    return Concept.fail(
         "hasMethod",
         comptime std.fmt.comptimePrint("Type '{}' must implement the method '{s}' for it to qualify", .{ Container, method_name }),
     );
@@ -64,33 +60,33 @@ pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime
 
 pub fn all(name: []const u8, concepts: anytype) Concept {
     inline for (concepts) |concept| {
-        switch (concept) {
-            .Ok => {},
-            .Err => |err| {
-                return Concept.err(name, err.err);
-            },
+        if (concept.err) |err| {
+            return Concept.fail(name, err);
         }
     }
-    return Concept.ok();
+    return Concept.ok(name);
 }
 
 pub fn either(name: []const u8, concepts: anytype) Concept {
     comptime var errmsg: []const u8 = "It must implement one of";
     inline for (concepts) |concept| {
-        switch (concept) {
-            .Ok => return Concept.ok(),
-            .Err => |err| errmsg = errmsg ++ "\n\t" ++ err.src,
+        errmsg = errmsg ++ "\n\t" ++ concept.name;
+        if (concept.err) |err| {
+            _ = err;
+        } else {
+            return Concept.ok(name);
         }
     }
-    return Concept.err(name, errmsg);
+    return Concept.fail(name, errmsg);
 }
 
 pub fn sameas(comptime Expect: type, comptime Got: type) Concept {
+    const concept_name = "sameas(" ++ @typeName(Expect) ++ ")";
     if (Expect == Got) {
-        return Concept.ok();
+        return Concept.ok(concept_name);
     } else {
-        return Concept.err(
-            "sameas(" ++ @typeName(Expect) ++ ")",
+        return Concept.fail(
+            concept_name,
             comptime std.fmt.comptimePrint(
                 \\Got wrong type
                 \\Compare		{}
