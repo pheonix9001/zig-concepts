@@ -16,7 +16,7 @@ fn Iterator(comptime Self: type, comptime T: type) concept.Concept {
     return concept.all(.{
         concept.decl(Self, "next", fn (*Self) T),
         concept.decl(Self, "current", fn (Self) T),
-    }).with_name("Iterator(" ++ @typeName(T) ++ ")");
+    }).with_name(concept.fnlike_name("Iterator", .{Self, T}));
 }
 
 test "Iterator concept test" {

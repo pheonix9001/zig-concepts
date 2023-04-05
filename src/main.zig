@@ -35,8 +35,29 @@ pub fn requires(comptime concept: Concept) void {
     }
 }
 
+fn concept_to_str(comptime val: anytype) []const u8 {
+    return switch (@TypeOf(val)) {
+        type => @typeName(val),
+        Concept => val.name,
+        else => std.fmt.comptimePrint("{s}", .{val}),
+    };
+}
+
+pub fn fnlike_name(comptime basename: []const u8, comptime parts: anytype) []const u8 {
+    comptime var seperated_args: []const u8 = "";
+    for (parts) |part, i| {
+	    const part_name = concept_to_str(part);
+        if (i == 0) {
+            seperated_args = part_name;
+        } else {
+            seperated_args = seperated_args ++ "," ++ part_name;
+        }
+    }
+    return basename ++ "(" ++ seperated_args ++ ")";
+}
+
 pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime ExpectedT: type) Concept {
-    const concept_name = "hasMethod(" ++ method_name ++ ", " ++ @typeName(ExpectedT) ++ ")";
+    const concept_name = fnlike_name("hasMethod", .{ Container, method_name, ExpectedT });
     const info = @typeInfo(Container);
     const decls = switch (info) {
         .Struct => |s| s.decls,
@@ -46,14 +67,9 @@ pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime
     };
 
     for (decls) |each_decl| {
-        if (std.mem.eql(u8, each_decl.name, method_name)) {
-            const decl_type =
-                @TypeOf(@field(Container, each_decl.name));
-            if (decl_type != ExpectedT) {
-                return combinator.sameas(ExpectedT, decl_type).with_name(concept_name);
-            }
-
-            return Concept.ok(concept_name);
+        const name = each_decl.name;
+        if (std.mem.eql(u8, name, method_name)) {
+            return combinator.sameas(ExpectedT, @TypeOf(@field(Container, name))).with_name(concept_name);
         }
     }
 

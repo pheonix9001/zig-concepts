@@ -2,32 +2,35 @@
 
 const main = @import("main.zig");
 const Concept = main.Concept;
+const fnlike_name = main.fnlike_name;
 const std = @import("std");
 
 pub fn all(concepts: anytype) Concept {
+	const concept_name = fnlike_name("all", concepts);
     inline for (concepts) |concept| {
         if (concept.err) |err| {
-            return Concept.fail("all", err);
+            return Concept.fail(concept_name, err);
         }
     }
-    return Concept.ok("all");
+    return Concept.ok(concept_name);
 }
 
 pub fn either(concepts: anytype) Concept {
+	const concept_name = fnlike_name("either", concepts);
     comptime var errmsg: []const u8 = "It must implement one of";
     inline for (concepts) |concept| {
         errmsg = errmsg ++ "\n\t" ++ concept.name;
         if (concept.err) |err| {
             _ = err;
         } else {
-            return Concept.ok("either");
+            return Concept.ok(concept_name);
         }
     }
-    return Concept.fail("either", errmsg);
+    return Concept.fail(concept_name, errmsg);
 }
 
 pub fn sameas(comptime Expect: type, comptime Got: type) Concept {
-    const concept_name = "sameas(" ++ @typeName(Expect) ++ ")";
+    const concept_name = fnlike_name("sameas", .{Expect, Got});
     if (Expect == Got) {
         return Concept.ok(concept_name);
     } else {
@@ -55,10 +58,10 @@ pub fn not(comptime in: Concept) Concept {
 test "Either concept test" {
     const requires = main.requires;
     requires(not(
-        either(.{ main.AlwaysInvalid, main.AlwaysInvalid }).with_name("EitherConcept"),
+        either(.{ main.AlwaysInvalid, main.AlwaysInvalid }),
     ));
     requires(
-        either(.{ main.AlwaysValid, main.AlwaysInvalid }).with_name("EitherConcept"),
+        either(.{ main.AlwaysValid, main.AlwaysInvalid }),
     );
 }
 
