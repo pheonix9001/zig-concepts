@@ -46,7 +46,7 @@ fn concept_to_str(comptime val: anytype) []const u8 {
 pub fn fnlike_name(comptime basename: []const u8, comptime parts: anytype) []const u8 {
     comptime var seperated_args: []const u8 = "";
     for (parts) |part, i| {
-	    const part_name = concept_to_str(part);
+        const part_name = concept_to_str(part);
         if (i == 0) {
             seperated_args = part_name;
         } else {
@@ -56,25 +56,15 @@ pub fn fnlike_name(comptime basename: []const u8, comptime parts: anytype) []con
     return basename ++ "(" ++ seperated_args ++ ")";
 }
 
-pub fn decl(comptime Container: type, comptime method_name: []const u8, comptime ExpectedT: type) Concept {
-    const concept_name = fnlike_name("hasMethod", .{ Container, method_name, ExpectedT });
-    const info = @typeInfo(Container);
-    const decls = switch (info) {
-        .Struct => |s| s.decls,
-        .Enum => |e| e.decls,
-        .Union => |e| e.decls,
-        else => @compileError("hasMethod expects a struct, union or enum"),
-    };
+pub fn decl(comptime Container: type, comptime decl_name: []const u8, comptime ExpectedT: type) Concept {
+    const concept_name = fnlike_name("hasMethod", .{ Container, decl_name, ExpectedT });
 
-    for (decls) |each_decl| {
-        const name = each_decl.name;
-        if (std.mem.eql(u8, name, method_name)) {
-            return combinator.sameas(ExpectedT, @TypeOf(@field(Container, name))).with_name(concept_name);
-        }
+    if (@hasDecl(Container, decl_name)) {
+        return combinator.eq(ExpectedT, @TypeOf(@field(Container, decl_name))).with_name(concept_name);
     }
 
     return Concept.fail(
         concept_name,
-        comptime std.fmt.comptimePrint("Type '{}' must implement the method '{s}' for it to qualify", .{ Container, method_name }),
+        comptime std.fmt.comptimePrint("Type '{}' must implement the method '{s}' for it to qualify", .{ Container, decl_name }),
     );
 }

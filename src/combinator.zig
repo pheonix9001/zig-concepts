@@ -29,8 +29,8 @@ pub fn either(concepts: anytype) Concept {
     return Concept.fail(concept_name, errmsg);
 }
 
-pub fn sameas(comptime Expect: type, comptime Got: type) Concept {
-    const concept_name = fnlike_name("sameas", .{Expect, Got});
+pub fn eq(comptime Expect: type, comptime Got: type) Concept {
+    const concept_name = fnlike_name("eq", .{Expect, Got});
     if (Expect == Got) {
         return Concept.ok(concept_name);
     } else {
@@ -65,8 +65,8 @@ test "Either concept test" {
     );
 }
 
-test "Sameas" {
+test "Eq concept" {
     const requires = main.requires;
-    requires(sameas(i32, i32));
-    requires(not(sameas(i32, bool)));
+    requires(eq(i32, i32));
+    requires(not(eq(i32, bool)));
 }
