@@ -9,8 +9,8 @@ concepts are named, and when they return false, they also return a nice error me
 The type `Concept` looks like this
 ```zig
 pub const Concept = struct {
-	name: []const u8,
-	err: ?[]const u8 = null,
+    name: []const u8,
+    err: ?[]const u8 = null,
     pub fn ok(name: []const u8) Concept {
         return .{ .name = name };
     }
@@ -34,9 +34,9 @@ pub fn requires(comptime concept: Concept) void {
 }
 
 test "Concept" {
-	requires(Concept.ok("Ok")) // This concept always succeeds
-	requires(Concept.fail("Fail", "Always fails")) // Error: Failed to assert concept: Fail
-	                                               //		 Always fails
+    requires(Concept.ok("Ok")) // This concept always succeeds
+    requires(Concept.fail("Fail", "Always fails")) // Error: Failed to assert concept: Fail
+                                                   //        Always fails
 }
 ```
 

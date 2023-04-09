@@ -6,7 +6,7 @@ const fnlike_name = main.fnlike_name;
 const std = @import("std");
 
 pub fn all(concepts: anytype) Concept {
-	const concept_name = fnlike_name("all", concepts);
+    const concept_name = fnlike_name("all", concepts);
     inline for (concepts) |concept| {
         if (concept.err) |err| {
             return Concept.fail(concept_name, err);
@@ -16,7 +16,7 @@ pub fn all(concepts: anytype) Concept {
 }
 
 pub fn either(concepts: anytype) Concept {
-	const concept_name = fnlike_name("either", concepts);
+    const concept_name = fnlike_name("either", concepts);
     comptime var errmsg: []const u8 = "It must implement one of";
     inline for (concepts) |concept| {
         errmsg = errmsg ++ "\n\t" ++ concept.name;
@@ -30,7 +30,7 @@ pub fn either(concepts: anytype) Concept {
 }
 
 pub fn eq(comptime Expect: type, comptime Got: type) Concept {
-    const concept_name = fnlike_name("eq", .{Expect, Got});
+    const concept_name = fnlike_name("eq", .{ Expect, Got });
     if (Expect == Got) {
         return Concept.ok(concept_name);
     } else {
