@@ -1,4 +1,5 @@
 # Zig concepts
+Extensible concepts for the zig language
 This library contains functions to implement c++-like concepts for the zig language
 
 # Introduction

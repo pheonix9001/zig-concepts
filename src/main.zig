@@ -1,69 +1,21 @@
 const std = @import("std");
-const combinator = @import("combinator.zig");
+pub const combinator = @import("combinator.zig");
+pub const core = @import("core.zig");
 pub usingnamespace combinator;
+pub usingnamespace core;
 test {
     _ = @import("test.zig");
     _ = @import("combinator.zig");
 }
 
-pub const Concept = struct {
-    name: []const u8,
-    err: ?[]const u8 = null,
-    pub fn ok(name: []const u8) Concept {
-        return .{ .name = name };
-    }
-    pub fn fail(name: []const u8, err: []const u8) Concept {
-        return .{
-            .name = name,
-            .err = err,
-        };
-    }
-    pub fn with_name(orig: Concept, newname: []const u8) Concept {
-        if (orig.err) |err| {
-            return fail(newname, err);
-        } else {
-            return ok(newname);
-        }
-    }
-};
-pub const AlwaysValid = Concept.ok("AlwaysValid");
-pub const AlwaysInvalid = Concept.fail("AlwaysInvalid", "This concept always errors");
-
-pub fn requires(comptime concept: Concept) void {
-    if (concept.err) |err| {
-        @compileError("Failed to assert concept: " ++ concept.name ++ "\n" ++ err);
-    }
-}
-
-fn concept_to_str(comptime val: anytype) []const u8 {
-    return switch (@TypeOf(val)) {
-        type => @typeName(val),
-        Concept => val.name,
-        else => std.fmt.comptimePrint("{s}", .{val}),
-    };
-}
-
-pub fn fnlike_name(comptime basename: []const u8, comptime parts: anytype) []const u8 {
-    comptime var seperated_args: []const u8 = "";
-    for (parts) |part, i| {
-        const part_name = concept_to_str(part);
-        if (i == 0) {
-            seperated_args = part_name;
-        } else {
-            seperated_args = seperated_args ++ "," ++ part_name;
-        }
-    }
-    return basename ++ "(" ++ seperated_args ++ ")";
-}
-
-pub fn decl(comptime Container: type, comptime decl_name: []const u8, comptime ExpectedT: type) Concept {
-    const concept_name = fnlike_name("hasMethod", .{ Container, decl_name, ExpectedT });
+pub fn decl(comptime Container: type, comptime decl_name: []const u8, comptime ExpectedT: type) core.Concept {
+    const concept_name = core.fnlike_name("hasMethod", .{ Container, decl_name, ExpectedT });
 
     if (@hasDecl(Container, decl_name)) {
         return combinator.eq(ExpectedT, @TypeOf(@field(Container, decl_name))).with_name(concept_name);
     }
 
-    return Concept.fail(
+    return core.Concept.fail(
         concept_name,
         comptime std.fmt.comptimePrint("Type '{}' must implement the method '{s}' for it to qualify", .{ Container, decl_name }),
     );
