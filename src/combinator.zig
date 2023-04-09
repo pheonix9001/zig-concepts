@@ -1,40 +1,41 @@
 //! Combinators for concepts
 
-const main = @import("main.zig");
-const Concept = main.Concept;
-const fnlike_name = main.fnlike_name;
+const core = @import("core.zig");
 const std = @import("std");
 
-pub fn all(concepts: anytype) Concept {
-    const concept_name = fnlike_name("all", concepts);
+/// Succeeds when all the child concepts succeed
+pub fn all(concepts: anytype) core.Concept {
+    const concept_name = core.fnlike_name("all", concepts);
     inline for (concepts) |concept| {
         if (concept.err) |err| {
-            return Concept.fail(concept_name, err);
+            return core.Concept.fail(concept_name, err);
         }
     }
-    return Concept.ok(concept_name);
+    return core.Concept.ok(concept_name);
 }
 
-pub fn either(concepts: anytype) Concept {
-    const concept_name = fnlike_name("either", concepts);
+/// Succeeds when any one of the concepts succeeds
+pub fn either(concepts: anytype) core.Concept {
+    const concept_name = core.fnlike_name("either", concepts);
     comptime var errmsg: []const u8 = "It must implement one of";
     inline for (concepts) |concept| {
         errmsg = errmsg ++ "\n\t" ++ concept.name;
         if (concept.err) |err| {
             _ = err;
         } else {
-            return Concept.ok(concept_name);
+            return core.Concept.ok(concept_name);
         }
     }
-    return Concept.fail(concept_name, errmsg);
+    return core.Concept.fail(concept_name, errmsg);
 }
 
-pub fn eq(comptime Expect: type, comptime Got: type) Concept {
-    const concept_name = fnlike_name("eq", .{ Expect, Got });
+/// Succeeds when Expect == Got
+pub fn eq(comptime Expect: type, comptime Got: type) core.Concept {
+    const concept_name = core.fnlike_name("eq", .{ Expect, Got });
     if (Expect == Got) {
-        return Concept.ok(concept_name);
+        return core.Concept.ok(concept_name);
     } else {
-        return Concept.fail(
+        return core.Concept.fail(
             concept_name,
             comptime std.fmt.comptimePrint(
                 \\Got wrong type
@@ -45,13 +46,14 @@ pub fn eq(comptime Expect: type, comptime Got: type) Concept {
     }
 }
 
-pub fn not(comptime in: Concept) Concept {
+/// Succeeds when the child concept fails
+pub fn not(comptime in: core.Concept) core.Concept {
     const concept_name = "!" ++ in.name;
     if (in.err) |err| {
         _ = err;
-        return Concept.ok(concept_name);
+        return core.Concept.ok(concept_name);
     } else {
-        return Concept.fail(concept_name, "The concept " ++ in.name ++ " Should not be implemented");
+        return core.Concept.fail(concept_name, "The concept " ++ in.name ++ " Should not be implemented");
     }
 }
 
